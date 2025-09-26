@@ -1,4 +1,5 @@
 import fs from 'fs/promises'
+import path from 'path'
 
 const command = process.argv[2]
 
@@ -10,9 +11,8 @@ if(command === 'create'){
 
 async function create(){
     await fs.mkdir('test', {recursive: true});
-    console.log("folder created");
+    console.log("Folder created");
     await createFiles();
-
 }
 
 async function createFiles(){
@@ -26,27 +26,13 @@ async function createFiles(){
 }
 
 async function organize(){
-    const testFolder = await fs.readdir('./test')
-    await fs.mkdir('result', {recursive: true});
-    for(let i=0; i < testFolder.length; i++){
-        await fs.mkdir(`./result/${testFolder[i].split(".")[1]}`, {recursive: true});
+    const testFolder = await fs.readdir('./test');
+    const folders = new Set(testFolder.map(file => path.extname(file).slice(1)))
+    for(let i of folders){
+        await fs.mkdir(`./result/${i}`, {recursive: true});
     }
-    await typing()
-}
-
-async function typing(){
-    const resultFolder = await fs.readdir('./result')
-    const files = await fs.readdir('./test')
-    for(let i=0; i < files.length; i++){
-        for(let j=0; j < resultFolder.length; j++){
-            if(files[i].split('.')[1] === resultFolder[j]){
-                await renameFile(`./test/${files[i]}`, `./result/${resultFolder[j]}/${files[i]}`)
-            }
-        }
+    for(let i of testFolder){
+        await fs.rename(`./test/${i}`, `./result/${path.extname(i).slice(1)}/${i}`)
     }
     console.log('organized');
-}
-
-async function renameFile(oldPath, newPath) {
-    await fs.rename(oldPath, newPath)
 }
